@@ -8,7 +8,7 @@ on:
     paths-ignore:
       - .gitignore
       - "*.md"
-  
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -54,7 +54,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           tags: low-power-image-processing-base-image:action
-      
+
       - name: Build Push
         id: build_push
         if: "${{ steps.docker_meta.outcome == 'success' }}"
