@@ -101,3 +101,5 @@ COPY --from=compile-image /libjxl/lib/include /libjxl/lib/include
 WORKDIR /libjxl/build
 
 RUN cmake --install .
+
+WORKDIR /
