@@ -4,18 +4,30 @@ ENV USE_ROCM=0
 ENV USE_NCCL=0
 ENV USE_DISTRIBUTED=0
 ENV USE_PYTORCH_QNNPACK=0
+ENV MAX_JOBS=8
 
 # Install dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        cmake \
-        libopenblas-dev \
-        git \
-        build-essential \
-        ffmpeg \
-        libsm6 \
-        libxext6 \
-        wget && \
+    cmake \
+    libopenblas-dev \
+    git \
+    build-essential \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    wget \
+    pkg-config \
+    libbrotli-dev \
+    libgif-dev \
+    libjpeg-dev \
+    libopenexr-dev \
+    libpng-dev \
+    libwebp-dev \
+    libavif-dev \
+    libopencv-dev \
+    doxygen \
+    clang && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -39,6 +51,25 @@ WORKDIR /torchvision
 
 RUN python setup.py install
 
+# Install cjxl
+RUN git clone https://github.com/libjxl/libjxl.git /libjxl --recursive
+
+WORKDIR /libjxl
+
+RUN git submodule update --init --recursive && mkdir -p /libjxl/build
+
+ENV CC=clang CXX=clang++
+
+WORKDIR /libjxl/build
+
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. && \
+    cmake --build . -- -j$(nproc) && \
+    cmake --install .
+
+
+
+
+
 
 
 
@@ -49,18 +80,24 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Install dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ffmpeg \
-        wget \
-        libopenblas-dev \
-        sudo && \
+    ffmpeg \
+    wget \
+    libopenblas-dev \
+    libgif-dev \
+    libjpeg-dev \
+    libopenexr-dev \
+    libpng-dev \
+    libwebp-dev \
+    libavif-dev \
+    sudo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=compile-image /opt/venv /opt/venv
+COPY --from=compile-image /libjxl/build /libjxl/build
+COPY --from=compile-image /libjxl/third_party /libjxl/third_party
+COPY --from=compile-image /libjxl/lib/include /libjxl/lib/include
 
-# Create app_user
-RUN useradd -m -d /home/app_user -s /bin/bash app_user
-# Enable sudo
-RUN echo "app_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+WORKDIR /libjxl/build
 
-USER app_user
+RUN cmake --install .
