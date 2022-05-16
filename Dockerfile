@@ -1,4 +1,6 @@
-FROM python:3.8-slim AS compile-image
+FROM python:3.10-slim AS base
+
+FROM base AS compile-image
 ENV USE_CUDA=0
 ENV USE_ROCM=0
 ENV USE_NCCL=0
@@ -9,6 +11,7 @@ ENV MAX_JOBS=8
 # Install dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    checkinstall \
     cmake \
     libopenblas-dev \
     git \
@@ -26,6 +29,7 @@ RUN apt-get update && \
     libwebp-dev \
     libavif-dev \
     libopencv-dev \
+    libgflags-dev \
     doxygen \
     clang && \
     apt-get clean && \
@@ -35,7 +39,7 @@ RUN python -m venv /opt/venv
 # Make sure we use the virtualenv:
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install astunparse numpy ninja pyyaml setuptools cmake cffi typing_extensions future six requests dataclasses scikit-build pyyaml
+RUN pip install astunparse numpy ninja pyyaml setuptools cmake cffi typing_extensions future six requests dataclasses scikit-build pyyaml meson
 
 WORKDIR /pytorch
 
@@ -52,7 +56,7 @@ WORKDIR /torchvision
 RUN python setup.py install
 
 # Install cjxl
-RUN git clone https://github.com/libjxl/libjxl.git /libjxl --recursive
+RUN git clone --recursive https://github.com/libjxl/libjxl.git /libjxl
 
 WORKDIR /libjxl
 
@@ -63,17 +67,41 @@ ENV CC=clang CXX=clang++
 WORKDIR /libjxl/build
 
 RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. && \
-    cmake --build . -- -j$(nproc) && \
-    cmake --install .
+    cmake --build . -- -j$(nproc)
+
+RUN checkinstall --install=yes --default -D --pkgname "cjxl" cmake --install . && \
+    cp cjxl_*.deb /cjxl.deb
+
+# Install cavif
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \ 
+    nasm && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* 
+
+RUN git clone --recurse-submodules --recursive https://github.com/link-u/cavif /cavif
+
+WORKDIR /cavif
+
+RUN bash scripts/apply-patches.sh && \
+    bash scripts/build-deps.sh && \
+    mkdir build
+
+WORKDIR /cavif/build
+
+ENV CC=gcc CXX=g++
+
+RUN cmake -G 'Ninja' .. && \
+    ninja -j$(nproc)
+
+RUN checkinstall --install=yes --default -D --pkgname "cavif" ninja install && \
+    cp cavif_*.deb /cavif.deb
 
 
 
 
 
-
-
-
-FROM python:3.8-slim
+FROM base
 
 ENV PATH="/opt/venv/bin:$PATH"
 
@@ -94,12 +122,10 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=compile-image /opt/venv /opt/venv
-COPY --from=compile-image /libjxl/build /libjxl/build
-COPY --from=compile-image /libjxl/third_party /libjxl/third_party
-COPY --from=compile-image /libjxl/lib/include /libjxl/lib/include
+COPY --from=compile-image /cjxl.deb /tmp/cjxl.deb
+COPY --from=compile-image /cavif.deb /tmp/cavif.deb
 
-WORKDIR /libjxl/build
-
-RUN cmake --install .
+RUN dpkg -i /tmp/cjxl.deb
+RUN dpkg -i /tmp/cavif.deb
 
 WORKDIR /
