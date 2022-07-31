@@ -1,6 +1,6 @@
 FROM python:3.10-slim AS base
 
-FROM base AS compile-image
+FROM base AS compile-image-base
 ENV USE_CUDA=0
 ENV USE_ROCM=0
 ENV USE_NCCL=0
@@ -41,6 +41,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install astunparse numpy ninja pyyaml setuptools cmake cffi typing_extensions future six requests dataclasses scikit-build pyyaml meson
 
+
+
+
+# Seperate python build due to slow build times
+FROM compile-image-base AS python-compile
+
 WORKDIR /pytorch
 
 RUN git clone --recursive https://github.com/pytorch/pytorch /pytorch && \
@@ -54,6 +60,12 @@ RUN git clone https://github.com/pytorch/vision.git /torchvision
 WORKDIR /torchvision
 
 RUN python setup.py install
+
+
+
+
+# Seperate deb compile base so run in parallel with python build due to slow python build speed
+FROM compile-image-base AS deb-compile
 
 # Install cjxl
 RUN git clone --recursive https://github.com/libjxl/libjxl.git /libjxl
@@ -100,7 +112,7 @@ RUN checkinstall --install=yes --default -D --pkgname "cavif" ninja install && \
 
 
 
-
+# Actual deployment image
 FROM base
 
 ENV PATH="/opt/venv/bin:$PATH"
@@ -121,11 +133,11 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=compile-image /opt/venv /opt/venv
-COPY --from=compile-image /cjxl.deb /tmp/cjxl.deb
-COPY --from=compile-image /cavif.deb /tmp/cavif.deb
+COPY --from=python-compile /opt/venv /opt/venv
+COPY --from=deb-compile /cjxl.deb /tmp/cjxl.deb
+COPY --from=deb-compile /cavif.deb /tmp/cavif.deb
 
-RUN dpkg -i /tmp/cjxl.deb
-RUN dpkg -i /tmp/cavif.deb
+RUN dpkg -i /tmp/cjxl.deb && rm -f /tmp/cjxl.deb
+RUN dpkg -i /tmp/cavif.deb && rm -f /tmp/cavif.deb
 
 WORKDIR /
