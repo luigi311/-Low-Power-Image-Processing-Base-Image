@@ -131,7 +131,8 @@ RUN apt-get update && \
     libavif-dev \
     sudo \
     build-essential \
-    pkg-config && \
+    pkg-config \
+    libhdf5-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
