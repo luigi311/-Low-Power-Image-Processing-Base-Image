@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS base
+FROM python:3-slim AS base
 
 FROM base AS compile-image-base
 ENV USE_CUDA=0
@@ -6,7 +6,7 @@ ENV USE_ROCM=0
 ENV USE_NCCL=0
 ENV USE_DISTRIBUTED=0
 ENV USE_PYTORCH_QNNPACK=0
-ENV MAX_JOBS=2
+ENV MAX_JOBS=4
 
 # Install dependencies
 RUN apt-get update && \
