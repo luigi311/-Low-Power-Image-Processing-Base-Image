@@ -129,7 +129,9 @@ RUN apt-get update && \
     libpng-dev \
     libwebp-dev \
     libavif-dev \
-    sudo && \
+    sudo \
+    build-essential \
+    pkg-config && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
