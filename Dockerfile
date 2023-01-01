@@ -1,4 +1,4 @@
-FROM python:3-slim AS base
+FROM python:3.10-slim AS base
 
 FROM base AS compile-image-base
 ENV USE_CUDA=0
