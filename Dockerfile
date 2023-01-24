@@ -6,7 +6,6 @@ ENV USE_ROCM=0
 ENV USE_NCCL=0
 ENV USE_DISTRIBUTED=0
 ENV USE_PYTORCH_QNNPACK=0
-ENV MAX_JOBS=4
 
 # Install dependencies
 RUN apt-get update && \
@@ -128,7 +127,8 @@ RUN apt-get update && \
     sudo \
     build-essential \
     pkg-config \
-    libhdf5-dev && \
+    imagemagick \
+    exiftool && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
