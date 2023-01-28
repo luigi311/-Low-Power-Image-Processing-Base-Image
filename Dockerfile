@@ -117,13 +117,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     ffmpeg \
     wget \
-    libopenblas-dev \
-    libgif-dev \
-    libjpeg-dev \
-    libopenexr-dev \
-    libpng-dev \
-    libwebp-dev \
-    libavif-dev \
     sudo \
     build-essential \
     pkg-config \
