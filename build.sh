@@ -15,4 +15,4 @@ docker buildx use multiarch
 # Get the current date and use it to generate a date-based tag
 TAG=$(date +"%Y-%m-%d")
 
-docker buildx build --platform "linux/${1}" -t "luigi311/low-power-image-processing-base-image:${TAG}-${1}" -t "luigi311/low-power-image-processing-base-image:latest-${1}" --push . --no-cache
+docker buildx build --platform linux/amd64,linux/arm64 -t "luigi311/low-power-image-processing-base-image:${TAG}" -t "luigi311/low-power-image-processing-base-image:latest" --push . --no-cache
