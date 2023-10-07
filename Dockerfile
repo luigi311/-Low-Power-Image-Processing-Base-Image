@@ -6,7 +6,7 @@ ENV USE_ROCM=0
 ENV USE_NCCL=0
 ENV USE_DISTRIBUTED=0
 ENV USE_PYTORCH_QNNPACK=0
-ENV MAX_JOBS=8
+ENV MAX_JOBS=4
 
 # Install dependencies
 RUN apt-get update && \
@@ -51,7 +51,7 @@ WORKDIR /pytorch
 
 RUN git clone --recursive https://github.com/pytorch/pytorch /pytorch && \
     git submodule sync && \
-    git submodule update --init --recursive --jobs 0
+    git submodule update --init --recursive --jobs $(nproc)
 
 RUN python setup.py install
 
