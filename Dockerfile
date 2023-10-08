@@ -60,7 +60,7 @@ FROM compile-image-base AS torch-compile
 #WORKDIR /torchvision
 
 #RUN python setup.py install
-RUN pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
+RUN pip install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cpu
 
 
 
