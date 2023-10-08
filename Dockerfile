@@ -60,6 +60,7 @@ FROM compile-image-base AS torch-compile
 #WORKDIR /torchvision
 
 #RUN python setup.py install
+RUN pip install pillow
 RUN pip install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cpu
 
 
