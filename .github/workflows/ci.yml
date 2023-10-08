@@ -183,7 +183,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.actor }}/${{ env.IMAGE_NAME }}
-            tags: |
+          tags: |
             type=raw,value=latest,enable=${{ matrix.variant == 'slim' && github.ref_name == github.event.repository.default_branch }}
             type=raw,value=dev,enable=${{ matrix.variant == 'slim' && github.ref_name == 'dev' }}
             type=raw,value=latest,suffix=-${{ matrix.variant }},enable={{ is_default_branch }}
