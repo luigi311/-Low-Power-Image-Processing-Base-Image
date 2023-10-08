@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS base
+FROM python:3.11-slim AS base
 
 FROM base AS compile-image-base
 ENV USE_CUDA=0
@@ -6,7 +6,7 @@ ENV USE_ROCM=0
 ENV USE_NCCL=0
 ENV USE_DISTRIBUTED=0
 ENV USE_PYTORCH_QNNPACK=0
-ENV MAX_JOBS=2
+ENV MAX_JOBS=4
 
 # Install dependencies
 RUN apt-get update && \
@@ -47,20 +47,20 @@ RUN pip install astunparse numpy ninja pyyaml setuptools cmake cffi typing_exten
 # Seperate torch build due to slow build times
 FROM compile-image-base AS torch-compile
 
-WORKDIR /pytorch
+#WORKDIR /pytorch
 
-RUN git clone --recursive https://github.com/pytorch/pytorch /pytorch && \
-    git submodule sync && \
-    git submodule update --init --recursive --jobs $(nproc)
+#RUN git clone --recursive https://github.com/pytorch/pytorch /pytorch && \
+#    git submodule sync && \
+#    git submodule update --init --recursive --jobs $(nproc)
 
-RUN python setup.py install
+#RUN python setup.py install
 
-RUN git clone https://github.com/pytorch/vision.git /torchvision
+#RUN git clone https://github.com/pytorch/vision.git /torchvision
 
-WORKDIR /torchvision
+#WORKDIR /torchvision
 
-RUN python setup.py install
-
+#RUN python setup.py install
+RUN pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
 
 
 
