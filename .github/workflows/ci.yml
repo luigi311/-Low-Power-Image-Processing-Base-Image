@@ -90,7 +90,6 @@ jobs:
     
   build-docker-aarch64:
     runs-on: [self-hosted, arm64]
-    if: ${{ github.event_name == 'push' }}
     strategy:
       fail-fast: false
       matrix:
@@ -151,7 +150,6 @@ jobs:
   
   docker-build-merge:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
     needs:
       - build-docker-amd64
       - build-docker-aarch64
